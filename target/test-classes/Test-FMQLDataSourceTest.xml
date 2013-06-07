@@ -11,16 +11,40 @@
           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.1.xsd
 ">
 
+   <bean name="XML2JSONXform" class="org.socraticgrid.documenttransformer.XSLTTransformStep">
+        <property name="xsltStyleSheet">
+            <bean class="org.springframework.core.io.ClassPathResource">
+                <constructor-arg value="xml-to-json.xsl"/>          
+            </bean>
+        </property>
+        <property name="styleSheetParameters">
+            <map>
+                <entry key="use-badgerfish" value="#{false}"/>
+                <entry key="use-rayfish" value="#{false}"/>
+                <entry key="use-namespaces"  value="#{false}"/>
+            </map>
+        </property>
+    </bean>
+        
+    <bean name="ToJSON" class="org.socraticgrid.documenttransformer.TransformPipeline">
+        <property name="transformChain">
+            <list>
+                <ref bean="XML2JSONXform"/>
+            </list>
+        </property>
+    </bean>
+    
 
     <bean name="MyTransformer" class="org.socraticgrid.documenttransformer.Transformer">
         <property name="transformPipeline">
             <map>
                 <entry key="ToJSONPipeline" value-ref="ToJSON"/>
             </map>
+        </property>
     </bean>
     
     <bean name="ExampleRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
-        <property name="transformer" value-ref="MyTransformer"/>
+        <property name="transformer"  ref="MyTransformer"/>
         <property name="dataSources">
             <map>
                 <entry key="CHCS" value-ref="CHCS-DS-Binding"/> 
@@ -29,7 +53,7 @@
     </bean>
 
     <bean name="CHCS-DS-Binding" class="org.socraticgrid.patientdataservices.DataSourceBinding">
-        <property name="dataSource" value-ref="CHCS"/>
+        <property name="dataSource" ref="CHCS"/>
         <property name="transforms">
             <map>
                 <entry key="demographics" value="ToJSONPipeline"/>
@@ -45,6 +69,7 @@
                 <entry key="demographics" value="?query=patiendId=%1s+domain=demo"/>
                 <entry key="medications" value="?query=patiendId=%1s+domain=meds"/>
             </map>
+        </property>
     </bean>
     
     <bean name="CHCS" class="org.socraticgrid.fmql.services.fmqlservices.patient.DataSource">
@@ -54,5 +79,6 @@
                 <entry key="demographics" value="?query=patiendId=%1s+domain=demo"/>
                 <entry key="medications" value="?query=patiendId=%1s+domain=meds"/>
             </map>
+        </property>
     </bean>
 </beans>

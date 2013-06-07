@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:p="http://www.springframework.org/schema/p"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+          http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.1.xsd
+">
+
+
+    <bean name="MyTransformer" class="org.socraticgrid.documenttransformer.Transformer">
+        <property name="transformPipeline">
+            <map>
+                <entry key="ToJSONPipeline" value-ref="ToJSON"/>
+            </map>
+    </bean>
+    
+    <bean name="ExampleRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
+        <property name="transformer" value-ref="MyTransformer"/>
+        <property name="dataSources">
+            <map>
+                <entry key="CHCS" value-ref="CHCS-DS-Binding"/> 
+            </map>
+        </property>     
+    </bean>
+
+    <bean name="CHCS-DS-Binding" class="org.socraticgrid.patientdataservices.DataSourceBinding">
+        <property name="dataSource" value-ref="CHCS"/>
+        <property name="transforms">
+            <map>
+                <entry key="demographics" value="ToJSONPipeline"/>
+            </map>
+        </property>
+    </bean>
+    
+    
+    <bean name="SampleFMQLPatientDataSource" class="org.socraticgrid.fmql.services.fmqlservices.patient.DataSource">
+        <property name="fmqlEndpoint" value="http://caregraf.org"/>
+        <property name="domainQueryMap">
+            <map>
+                <entry key="demographics" value="?query=patiendId=%1s+domain=demo"/>
+                <entry key="medications" value="?query=patiendId=%1s+domain=meds"/>
+            </map>
+    </bean>
+    
+    <bean name="CHCS" class="org.socraticgrid.fmql.services.fmqlservices.patient.DataSource">
+        <property name="fmqlEndpoint" value="http://caregraf.org"/>
+        <property name="domainQueryMap">
+            <map>
+                <entry key="demographics" value="?query=patiendId=%1s+domain=demo"/>
+                <entry key="medications" value="?query=patiendId=%1s+domain=meds"/>
+            </map>
+    </bean>
+</beans>

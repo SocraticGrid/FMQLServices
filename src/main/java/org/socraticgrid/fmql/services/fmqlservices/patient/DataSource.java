@@ -4,8 +4,15 @@
  */
 package org.socraticgrid.fmql.services.fmqlservices.patient;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -18,7 +25,7 @@ public class DataSource extends org.socraticgrid.patientdataservices.BaseDataSou
     {
     }
     
-    private String fmqlEndpoint;
+    private String fmqlEndpoint; // DATA SOURCE endpoint
 
     /**
      * Get the value of fmqlEndpoint
@@ -47,7 +54,7 @@ public class DataSource extends org.socraticgrid.patientdataservices.BaseDataSou
     }
     
     
-    private Map<String, String> domainQueryMap;
+    private Map<String, String> domainQueryMap;    //
 
     /**
      * Get the value of domainQueryMap
@@ -76,9 +83,50 @@ public class DataSource extends org.socraticgrid.patientdataservices.BaseDataSou
         String query = domainQueryMap.get(domain);
         String realQuery=String.format(query,id);
         
-        //Use the new real query string and the endpoint to query fmwl.
+        System.out.println("realQuery="+realQuery);
         
-        return super.getData(domain, id); //To change body of generated methods, choose Tools | Templates.
+        //Use the new real query string and the endpoint to query fmwl.
+        //--------------------------------
+        // EXEC the query
+        //--------------------------------
+        InputStream in = null;
+        try {
+            in = querySource(realQuery, this.fmqlEndpoint);
+        } catch (Exception ex) {
+            Logger.getLogger(DataSource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return in;
     }
+    
+    /**
+     * This will send the given FMQL format query to the FILEMAN interface, 
+     * and get a response as a BufferedReader object.
+     * 
+     * @param query
+     * @return
+     * @throws Exception
+     */
+    public BufferedReader request(String query, String ep) throws Exception {
+        return new BufferedReader( 
+                new InputStreamReader(querySource(query, ep) ) );
+    }
+    public InputStream querySource(String query, String ep) throws Exception {
+        
+        System.out.println("query= "+ query);
+        
+        String sparqlrs = ep + "?fmql=" + query ;
+        
+        System.out.println("ep+query= "+ sparqlrs);
+
+        URL sparqlr = new URL(sparqlrs);
+        // 1. Make the query
+        URLConnection sparqlc = sparqlr.openConnection();
+        // 2. Read the Response
+        InputStream in = sparqlc.getInputStream();
+        
+        return in;
+    }
+
 
 }

@@ -11,6 +11,7 @@
           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.1.xsd
 ">
 
+    <context:annotation-config/>
     
     <!-- ==================================================================
          [4] TRANSFORM ACTION - defines TRANSFOMR STYLESHEET to use.
@@ -39,7 +40,7 @@
             </bean>
         </property>
     </bean>
-    
+        
     <!-- ==================================================================
          [4] TRANSFORM PIPELINE - defines TRANSFOMR ACTION to use.
          NOTE: chosen based on BINDINGS.transforms[domainname]
@@ -60,7 +61,6 @@
             </list>
         </property>
     </bean>
-    
 
     <!-- ==================================================================
          [OPTIONAL USE] TRANFORMER - defines the TRANSFORMER PIPELINE.
@@ -74,8 +74,6 @@
             </map>
         </property>
     </bean>
-    
-
     
     <!-- ==================================================================
          [3] DATASOURCEs - defines the repo ENDPOINT and and the  
@@ -92,19 +90,9 @@
                 <entry key="allergies"    value="DESCRIBE 8810_3-%1s"/>
             </map>
         </property>
-    </bean>
+    </bean>    
     
-    <bean name="CHCS" class="org.socraticgrid.fmql.services.fmqlservices.patient.DataSource">
-        <property name="fmqlEndpoint" value="http://caregraf.org"/>
-        <property name="domainQueryMap">
-            <map>
-                <entry key="demographics" value="?query=patiendId=%1s+domain=demo"/>
-                <entry key="medications" value="?query=patiendId=%1s+domain=meds"/>
-            </map>
-        </property>
-    </bean>
-    
-    
+    <!-- CONFIGURE TO USE INCOMING XML DATA FROM A STATIC FILE -->
     <bean name="SampleStaticXMLDataSource" class="org.socraticgrid.patientdataservices.StaticDataSource">
         <property name="domainResources">
             <map>
@@ -112,9 +100,8 @@
             </map>
         </property>
     </bean>
-
     <bean name="XMLDataIn" class="org.springframework.core.io.ClassPathResource">
-        <constructor-arg value="FHIR_Reaction_AtomBundle.xml"/>
+        <constructor-arg value="sampleXMLdata.xml"/>
     </bean>
     
     <!-- ==================================================================
@@ -122,22 +109,17 @@
          NOTE: chosen based on RETRIEVER.transformer
          ================================================================== --> 
 
-    <bean name="CHCS-DS-Binding" class="org.socraticgrid.patientdataservices.DataSourceBinding">
-        <property name="dataSource" ref="CHCS"/>
-        <property name="transforms">
-            <map>
-                <entry key="demographics" value="ToJSONPipeline"/>
-            </map>
-        </property>
-    </bean>
+    <!-- COMMENTING out the transform definition for now since the FMQL ws being
+         only returns data in JSON already.
+    -->
     <bean name="SampleFMQL-DS-Binding" class="org.socraticgrid.patientdataservices.DataSourceBinding">
         <property name="dataSource" ref="SampleFMQLPatientDataSource"/>
-        <property name="transforms">
+        <!--property name="transforms">
             <map>
                 <entry key="demographics" value="ToJSONPipeline"/>
                 <entry key="medications" value="ToJSONPipeline"/>
             </map>
-        </property>
+        </property-->
     </bean>
     
     <bean name="SampleStaticFMQL-DS-Binding" class="org.socraticgrid.patientdataservices.DataSourceBinding">
@@ -153,53 +135,28 @@
         <property name="dataSource" ref="SampleStaticXMLDataSource"/>
         <property name="transforms">
             <map>
-                <entry key="allergies" value="ToJSONPipeline"/>
+                <entry key="demographics" value="ToJSONPipeline"/>
             </map>
         </property>
     </bean>
-    
+        
     <!-- ==================================================================
          [1] RETRIEVER - defines the TRANSFORMER and the DATASOURCE BINDINGs
          NOTE:  user has to know the bean name to instantiate.
          ================================================================== --> 
-     
-    <!-- SAMPLE TO PROCESS INCOMING CHCS DATA (from actual chcs server) -->
-    <bean name="CHCSRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
-        <property name="transformer"  ref="MyTransformer"/>
-        <property name="dataSources">
-            <map>
-                <entry key="CHCS" value-ref="CHCS-DS-Binding"/> 
-            </map>
-        </property>     
-    </bean>
-    
+
     <!-- SAMPLE TO PROCESS INCOMING FMQL DATA (from actual fmql server) -->
-    <bean name="SampleRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
+    <bean name="FMQLRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
         <property name="transformer"  ref="MyTransformer"/>
         <property name="dataSources">
             <map>
                 <entry key="FMQL" value-ref="SampleFMQL-DS-Binding"/> 
+                <entry key="FMQLStaticTransformByPass" value-ref="SampleStaticFMQL-DS-Binding"/>
+                <entry key="FMQLStaticXML" value-ref="SampleStaticXMLBinding"/> 
             </map>
         </property>     
     </bean>
     
-    <bean name="SampleStaticTransform" class="org.socraticgrid.patientdataservices.MainRetriever">
-        <property name="transformer"  ref="MyTransformer"/>
-        <property name="dataSources">
-            <map>
-                <entry key="FMQL" value-ref="SampleStaticFMQL-DS-Binding"/> 
-            </map>
-        </property>     
-    </bean>
 
-    <!-- SAMPLE TO PROCESS A STATIC XML DATA FILE -->
-    <bean name="SampleStaticRetriever" class="org.socraticgrid.patientdataservices.MainRetriever">
-        <property name="transformer"  ref="MyTransformer"/>
-        <property name="dataSources">
-            <map>
-                <entry key="FMQL" value-ref="SampleStaticXMLBinding"/> 
-            </map>
-        </property>     
-    </bean>
     
 </beans>

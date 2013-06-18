@@ -78,7 +78,7 @@ public class DataSource extends org.socraticgrid.patientdataservices.BaseDataSou
 
 
     @Override
-    public InputStream getData(String domain, String id)
+    public InputStream getData(String domain, String id, java.util.Properties props)
     {
         String query = domainQueryMap.get(domain);
         String realQuery=String.format(query,id);
@@ -113,9 +113,11 @@ public class DataSource extends org.socraticgrid.patientdataservices.BaseDataSou
     }
     public InputStream querySource(String query, String ep) throws Exception {
         
-        System.out.println("query= "+ query);
+        System.out.println("ep= "+ ep);
         
-        String sparqlrs = ep + "?fmql=" + query ;
+        String sparqlrs =  ep.concat("?fmql=").concat(URLEncoder.encode(query, "UTF-8"));
+//                + "?fmql=" 
+//                + URLEncoder.encode(query, "UTF-8");
         
         System.out.println("ep+query= "+ sparqlrs);
 
